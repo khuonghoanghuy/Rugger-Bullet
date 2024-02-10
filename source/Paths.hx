@@ -4,7 +4,7 @@ class Paths
 {
 	inline public static function image(paths:String):String
 	{
-		return 'assets/images/' + paths;
+		return 'assets/images/' + paths + ".png";
 	}
 
 	inline public static function music(paths:String):String
