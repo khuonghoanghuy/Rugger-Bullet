@@ -7,6 +7,11 @@ class Paths
 		return 'assets/images/' + paths + ".png";
 	}
 
+	inline public static function txt(paths:String):String
+	{
+		return 'assets/data/' + paths + ".txt";
+	}
+
 	inline public static function music(paths:String):String
 	{
 		return 'assets/music/' + paths;

@@ -7,6 +7,8 @@ using StringTools;
 
 class Player extends FlxSprite
 {
+	static inline var SPEED:Float = 100;
+
 	public function new(x:Float = 0, y:Float = 0)
 	{
 		super(x, y);
@@ -17,6 +19,7 @@ class Player extends FlxSprite
 		added("down-walk", [8, 5, 9, 5]);
 		added("left", [10, 11, 12, 11, 10]);
 		added("left-walk", [13, 10, 14, 10]);
+		antialiasing = false;
 	}
 
 	function added(name:String, array:Array<Int>)
@@ -26,57 +29,103 @@ class Player extends FlxSprite
 
 	override function update(elapsed:Float)
 	{
-		updateMove(elapsed);
+		updateMove();
 		super.update(elapsed);
 	}
 
-	function updateMove(elapsed:Float):Void
+	function updateMove():Void
 	{
-		var speed = 100 * elapsed;
+		var up:Bool = false;
+		var down:Bool = false;
+		var left:Bool = false;
+		var right:Bool = false;
 
-		if (FlxG.keys.anyJustPressed([UP]))
-		{
-			playAnim("up-walk");
-			velocity.y -= speed;
-		}
-		else if (FlxG.keys.anyJustPressed([DOWN]))
-		{
-			playAnim("down-walk");
-			velocity.y += speed;
-		}
+		up = FlxG.keys.anyPressed([UP, W]);
+		down = FlxG.keys.anyPressed([DOWN, S]);
+		left = FlxG.keys.anyPressed([LEFT, A]);
+		right = FlxG.keys.anyPressed([RIGHT, D]);
 
-		if (FlxG.keys.anyJustPressed([LEFT]))
-		{
-			playAnim("left-walk");
-			flipX = false;
-			velocity.x -= speed;
-		}
-		else if (FlxG.keys.anyJustPressed([RIGHT]))
-		{
-			playAnim("left-walk");
-			flipX = true;
-			velocity.x += speed;
-		}
+		if (up && down)
+			up = down = false;
+		if (left && right)
+			left = right = false;
 
-		// after moving, let stop them
-		if (!FlxG.keys.anyJustPressed([LEFT]) || !FlxG.keys.anyJustPressed([RIGHT]) || !FlxG.keys.anyJustPressed([UP]) || !FlxG.keys.anyJustPressed([DOWN]))
+		if (!PlayState.dialogueMode)
 		{
-			velocity.set();
-			if (Math.abs(velocity.x) < 0.1 && Math.abs(velocity.y) < 0.1)
-				playAnim("down");
-		}
+			if (up || down || left || right)
+			{
+				var newAngle:Float = 0;
+				if (up)
+				{
+					newAngle = -90;
+					if (left)
+						newAngle -= 45;
+					else if (right)
+						newAngle += 45;
+					facing = UP;
+				}
+				else if (down)
+				{
+					newAngle = 90;
+					if (left)
+						newAngle += 45;
+					else if (right)
+						newAngle -= 45;
+					facing = DOWN;
+				}
+				else if (left)
+				{
+					newAngle = 180;
+					facing = LEFT;
+				}
+				else if (right)
+				{
+					newAngle = 0;
+					facing = RIGHT;
+				}
 
-		// Stop animations when not moving
-		if ((velocity.x == 0 && velocity.y == 0))
-		{
-			// is a all animation without -walk
-			if (!animation.curAnim.name.endsWith("-walk"))
-				playAnim("down");
-		}
-	}
+				velocity.x = SPEED;
+				velocity.y = SPEED;
+				velocity.setPolarDegrees(SPEED, newAngle);
 
-	function playAnim(name:String)
-	{
-		return animation.play(name);
+				switch (facing)
+				{
+					case LEFT:
+						flipX = false;
+						animation.play("left-walk");
+					case RIGHT:
+						flipX = true;
+						animation.play("left-walk");
+					case UP:
+						flipX = false;
+						animation.play("up-walk");
+					case DOWN:
+						flipX = false;
+						animation.play("down-walk");
+					case _:
+				}
+			}
+			else
+			{
+				velocity.x = 0;
+				velocity.y = 0;
+				switch (facing)
+				{
+					case LEFT:
+						flipX = false;
+						animation.play("left");
+					case RIGHT:
+						flipX = true;
+						animation.play("left");
+					case UP:
+						flipX = false;
+						animation.play("up");
+					case DOWN:
+						flipX = false;
+						animation.play("down");
+					case _:
+				}
+			}
+		}
 	}
 }
